@@ -4,31 +4,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # 1
-df = None
+df = pd.read_csv("medical_examination.csv")
 
 # 2
-df['overweight'] = None
+df['overweight'] = ((df['weight'] / ((df['height'] / 100) ** 2)) > 25).astype(int)
+
 
 # 3
-
+df['cholesterol'] = (df['cholesterol'] > 1).astype(int)
+df['gluc'] = (df['gluc'] > 1).astype(int)
 
 # 4
 def draw_cat_plot():
-    # 5
-    df_cat = None
 
+    # 5
+    df_cat = pd.melt(
+        df,
+        id_vars=['cardio'],
+        value_vars=['cholesterol','gluc','smoke','alco','active','overweight']
+    )
 
     # 6
-    df_cat = None
+    df_cat = df_cat.groupby(['cardio','variable','value'],as_index=False).size()
     
-
-    # 7
-
-
+    # 7   
+    df_cat = df_cat.rename(columns={'size':'total'})
 
     # 8
-    fig = None
-
+    fig = sns.catplot(
+    data=df_cat,
+    x='variable',
+    y='total',
+    hue='value',     # different color for 0 and 1
+    col='cardio',    # separate plots for cardio = 0 and 1
+    kind='bar'
+    )
 
     # 9
     fig.savefig('catplot.png')
@@ -38,21 +48,35 @@ def draw_cat_plot():
 # 10
 def draw_heat_map():
     # 11
-    df_heat = None
-
+    df_heat = df[
+        ((df['ap_lo'] <= df['ap_hi'])) &                   #diastolic pressure is higher than systolic
+        (df['height'] >= df['height'].quantile(0.025)) &   #less than 2.5 percentile
+        (df['height'] <= df['height'].quantile(0.975)) &   #more than 97.5
+        (df['weight'] >= df['weight'].quantile(0.025)) &   #less than 2.5
+        (df['weight'] <= df['weight'].quantile(0.975))     #more than 97.5
+    ]
     # 12
-    corr = None
+    corr = df_heat.corr()
 
     # 13
-    mask = None
+    mask = np.triu(np.ones_like(corr,dtype=bool))
 
 
 
     # 14
-    fig, ax = None
+    fig, ax = plt.subplots(figsize=(12,10))
 
     # 15
-
+    sns.heatmap(
+        corr,
+        mask=mask,
+        annot=True,
+        fmt=".1f",
+        center=0,
+        square=True,
+        linewidths=0.5,
+        cbar_kws={"shrink": 0.5}
+    )
 
 
     # 16
